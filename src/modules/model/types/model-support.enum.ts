@@ -1,0 +1,15 @@
+export enum ModelSupports {
+  EVERYWHERE = 'EVERYWHERE',
+  TOUCHING_BUILDPLATE = 'TOUCHING_BUILDPLATE',
+  NONE = 'NONE',
+}
+
+export enum ModelSupportsType {
+  LINES = 'LINES',
+  GRID = 'GRID',
+  TRIANGLES = 'TRIANGLES',
+  CONCENTRIC = 'CONCENTRIC',
+  ZIGZAG = 'ZIGZAG',
+  CROSS = 'CROSS',
+  GYROID = 'GYROID',
+}
