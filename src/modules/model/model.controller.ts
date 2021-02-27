@@ -8,18 +8,31 @@ import {
   ClassSerializerInterceptor,
   Query,
   UseGuards,
+  Sse,
+  MessageEvent,
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { Model } from './model.entity';
 import { ModelService } from './model.service';
 import { FileGuard } from '../file/guards';
 import { AddFilesDto, CreateModelDto, GetModelsFilterDto } from './dto';
+import { interval, Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
 
 @ApiTags('Models')
 @Controller('models')
 @UseInterceptors(ClassSerializerInterceptor)
 export class ModelController {
   constructor(private modelService: ModelService) {}
+
+  /* Subscribe to a model's status until COMPLETE (NOTE: Keep this above all other method definitions, or else bug) */
+  @Sse('/:id/subscribe')
+  sse(@Param('id') id: string): Observable<MessageEvent> {
+    // Listen for when the Model (of :id) has its status column changed to 'COMPLETE'
+    return interval(10000).pipe(
+      map((_) => ({ data: { status: 'PROCESSING' } })),
+    );
+  }
 
   /* Create a model */
   @Post()
