@@ -55,17 +55,17 @@ export class CreateModelDto {
   @IsOptional()
   infill?: number;
 
-  /* Where supports should be added */
-  @IsString()
-  @IsEnum(ModelSupports)
-  @IsOptional()
-  supports?: ModelSupports;
-
   /* What type of supports should be used */
   @IsString()
   @IsEnum(ModelSupportsType)
   @IsOptional()
   supportType?: ModelSupportsType;
+
+  /* Where supports should be added */
+  @IsString()
+  @IsEnum(ModelSupports)
+  @IsOptional()
+  supportLocation?: ModelSupports;
 
   /* Temperature to print the model - largely material/printer dependent */
   @IsInt()

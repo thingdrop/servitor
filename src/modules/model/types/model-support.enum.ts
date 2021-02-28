@@ -5,6 +5,7 @@ export enum ModelSupports {
 }
 
 export enum ModelSupportsType {
+  NONE = 'NONE',
   LINES = 'LINES',
   GRID = 'GRID',
   TRIANGLES = 'TRIANGLES',

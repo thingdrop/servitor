@@ -55,37 +55,36 @@ export class ModelService {
     const model = await this.getModelById(id);
     const { files } = addFilesDto;
 
-    /* For each file, prepare a createFileDto, and a response (including postPolicy)*/
-    const { createFilesDto, filesResponse } = files.reduce(
-      (map, fileObj) => {
-        const key = this.fileService.createFileKey(fileObj.name);
-        const contentType = this.fileService.getContentType(fileObj.name);
-        const postPolicy = this.fileService.createPresignedPostRequest({
-          metadata: { modelId: model.id },
-          key,
-          contentType,
-          expires: 60 * 60,
-        });
-        /* Add file to array of files to be saved to DB */
-        map.createFilesDto.push({
-          modelId: model.id,
-          name: fileObj.name,
-          key,
-          isPrimary: fileObj.isPrimary,
-        });
-        /* Add file to upload response */
-        map.filesResponse.push({
-          name: fileObj.name,
-          contentType,
-          postPolicy,
-          isPrimary: fileObj.isPrimary,
-        });
-        return map;
-      },
-      { createFilesDto: [], filesResponse: [] },
-    );
+    const createFilesDto = files.map((file) => {
+      const key = this.fileService.createFileKey(file.name);
+      return {
+        modelId: model.id,
+        name: file.name,
+        key,
+        isPrimary: file.isPrimary,
+      };
+    });
 
     await this.fileService.createFiles(createFilesDto);
+
+    const savedFiles = await this.getModelFiles(model.id);
+
+    const filesResponse = savedFiles.map((file) => {
+      const key = this.fileService.createFileKey(file.name);
+      const contentType = this.fileService.getContentType(file.name);
+      const postPolicy = this.fileService.createPresignedPostRequest({
+        metadata: { modelId: model.id },
+        key,
+        contentType,
+        expires: 60 * 60,
+      });
+
+      return {
+        ...file,
+        contentType,
+        postPolicy,
+      };
+    });
 
     return filesResponse;
   }
