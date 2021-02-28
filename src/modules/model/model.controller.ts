@@ -15,15 +15,19 @@ import { ApiTags } from '@nestjs/swagger';
 import { Model } from './model.entity';
 import { ModelService } from './model.service';
 import { FileGuard } from '../file/guards';
-import { AddFilesDto, CreateModelDto, GetModelsFilterDto } from './dto';
+import { CreateModelDto, GetModelsFilterDto } from './dto';
 import { interval, Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
+import { FileService, CreateFileDto } from '../file';
 
 @ApiTags('Models')
 @Controller('models')
 @UseInterceptors(ClassSerializerInterceptor)
 export class ModelController {
-  constructor(private modelService: ModelService) {}
+  constructor(
+    private modelService: ModelService,
+    private fileService: FileService,
+  ) {}
 
   /* Subscribe to a model's status until COMPLETE (NOTE: Keep this above all other method definitions, or else bug) */
   @Sse('/:id/subscribe')
@@ -47,18 +51,18 @@ export class ModelController {
    * 2. On update of a model ONLY IF the user owns it.
    */
   @UseGuards(FileGuard)
-  @Post('/:id/files')
-  addModelFiles(
+  @Post('/:id/file')
+  createModelFile(
     @Param('id') id: string,
-    @Body() addFilesDto: AddFilesDto,
+    @Body() createFileDto: CreateFileDto,
   ): Promise<any> {
-    return this.modelService.addModelFiles(id, addFilesDto);
+    return this.fileService.createFile(id, createFileDto);
   }
 
-  /* Retrieve model's files */
-  @Get('/:id/files')
-  getModelFiles(@Param('id') id: string) {
-    return this.modelService.getModelFiles(id);
+  /* Retrieve model's file */
+  @Get('/:id/file')
+  getModelFile(@Param('id') id: string) {
+    return this.fileService.getFileByModelId(id);
   }
 
   /* Retrieve a model */

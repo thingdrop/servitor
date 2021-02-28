@@ -18,9 +18,26 @@ export class FileService {
     private s3Service: S3Service,
   ) {}
 
-  async createFile(createFileDto: CreateFileDto): Promise<File> {
+  async createFile(id: string, createFileDto: CreateFileDto): Promise<File> {
     const file = this.fileRepository.create(createFileDto);
+
+    file.modelId = id;
+    file.status = FileStatus.CREATED;
+    const key = this.createFileKey(file.name);
+    file.key = key;
+
     await this.fileRepository.save(file);
+
+    const contentType = this.getContentType(file.name);
+    const postPolicy = this.createPresignedPostRequest({
+      metadata: { modelId: id },
+      key,
+      contentType,
+      expires: 60 * 60,
+    });
+
+    file.contentType = contentType;
+    file.postPolicy = postPolicy;
     return file;
   }
 
@@ -28,22 +45,12 @@ export class FileService {
     return this.fileRepository.save(file);
   }
 
-  async createFiles(files: CreateFileDto[]) {
-    const newFiles = files.map((file) => {
-      const newFile = {
-        ...file,
-        status: FileStatus.CREATED,
-      };
-      return newFile;
-    });
-
-    const query = this.fileRepository.createQueryBuilder('file');
-    await query.insert().values(newFiles).execute();
-  }
-
-  async getFilesByModelId(id: string): Promise<File[]> {
-    const files = await this.fileRepository.find({ where: { modelId: id } });
-    return files;
+  async getFileByModelId(id: string): Promise<File> {
+    const file = await this.fileRepository.findOne({ where: { modelId: id } });
+    if (!file) {
+      throw new NotFoundException();
+    }
+    return file;
   }
 
   async getFileById(id: string) {

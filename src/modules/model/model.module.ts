@@ -5,12 +5,11 @@ import { Model } from './model.entity';
 import { FileModule } from '../file';
 import { ModelController } from './model.controller';
 import { ModelHandlerService } from './model-handler.service';
-import { ModelResolver } from './model.resolver';
 import { AwsModule } from '../aws';
 
 @Module({
   imports: [TypeOrmModule.forFeature([Model]), FileModule, AwsModule],
-  providers: [ModelResolver, ModelService, ModelHandlerService],
+  providers: [ModelService, ModelHandlerService],
   exports: [ModelService, ModelHandlerService],
   controllers: [ModelController],
 })
