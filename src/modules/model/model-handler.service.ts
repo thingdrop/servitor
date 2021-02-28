@@ -35,13 +35,10 @@ export class ModelHandlerService {
       const body = JSON.parse(message.Body);
       const { modelId, file: fileObj } = body;
 
-      const [model, files] = await Promise.all([
+      const [model, file] = await Promise.all([
         this.modelService.getModelById(modelId),
-        this.modelService.getModelFiles(modelId),
+        this.fileService.getFileByModelId(modelId),
       ]);
-
-      /* Update matching file with new storage metadata */
-      const file = files.find((f) => f.key === fileObj.originalKey);
 
       if (!file) {
         throw new NotFoundException(
@@ -58,20 +55,10 @@ export class ModelHandlerService {
       file.bucket = bucket;
       file.status = FileStatus.COMPLETE;
 
-      /* If file isPrimary, set its image as the entire model's image (for thumbnail) */
-      if (file.isPrimary) {
-        model.imagePreview = imagePreview;
-      }
-
       /* Check model status */
-      const allFilesProcessed = files.every(
-        (f) => f.status === FileStatus.COMPLETE,
-      );
-      model.status = allFilesProcessed
-        ? ModelStatus.COMPLETE
-        : ModelStatus.PROCESSING;
+      model.status = ModelStatus.COMPLETE;
 
-      /* Save model/files */
+      /* Save model/file */
       await Promise.all([
         this.modelService.saveModel(model),
         this.fileService.saveFile(file),

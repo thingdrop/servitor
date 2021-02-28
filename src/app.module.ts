@@ -1,6 +1,5 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { GraphQLModule } from '@nestjs/graphql';
 import { ModelModule } from './modules/model';
 import { AuthModule } from './modules/auth';
 import { AwsModule } from './modules/aws';
@@ -20,12 +19,6 @@ const {
 
 @Module({
   imports: [
-    GraphQLModule.forRoot({
-      autoSchemaFile: true,
-      context: ({ req }) => ({ req }),
-      playground: true,
-      debug: true,
-    }),
     TypeOrmModule.forRoot({
       type: 'postgres',
       host: DB_HOST,
