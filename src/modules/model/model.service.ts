@@ -5,7 +5,7 @@ import { Model } from './model.entity';
 import { CreateModelDto, UpdateModelDto, GetModelsFilterDto } from './dto';
 import { ModelStatus } from './types';
 import { JwtService } from '../auth';
-import { File, FileService } from '../file';
+import { CreateFileDto, File, FileService } from '../file';
 
 @Injectable()
 export class ModelService {
@@ -31,6 +31,16 @@ export class ModelService {
     });
 
     return model;
+  }
+
+  async createModelFile(id, createFileDto: CreateFileDto) {
+    const [model, file] = await Promise.all([
+      this.getModelById(id),
+      this.fileService.createFile(id, createFileDto),
+    ]);
+    model.fileId = file.id;
+    await this.modelRepository.save(model);
+    return file;
   }
 
   async getModels(filterDto: GetModelsFilterDto): Promise<any> {

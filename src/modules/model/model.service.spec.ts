@@ -13,7 +13,7 @@ const mockModel = {
   id: mockId,
   name: 'Test Model',
   description: 'Test description',
-  canDownload: true,
+  isPrivate: true,
 };
 
 const tokenPattern = /^[A-Za-z0-9-_=]+\.[A-Za-z0-9-_=]+\.?[A-Za-z0-9-_.+/=]*$/;

@@ -44,7 +44,7 @@ export class Model extends BaseEntity {
 
   @Column()
   @IsBoolean()
-  canDownload: boolean;
+  isPrivate: boolean;
 
   @Column({ nullable: true })
   @IsUrl()

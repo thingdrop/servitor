@@ -26,7 +26,7 @@ export class CreateModelDto {
   description: string;
 
   @IsBoolean()
-  canDownload: boolean;
+  isPrivate: boolean;
 
   /* Optional Fields */
   /* ABS, PLA, etc */

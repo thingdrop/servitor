@@ -57,13 +57,7 @@ export class ModelController {
     @Param('id') id: string,
     @Body() createFileDto: CreateFileDto,
   ): Promise<any> {
-    return this.fileService.createFile(id, createFileDto);
-  }
-
-  /* Retrieve model's file */
-  @Get('/:id/file')
-  getModelFile(@Param('id') id: string) {
-    return this.fileService.getFileByModelId(id);
+    return this.modelService.createModelFile(id, createFileDto);
   }
 
   /* Retrieve a model */
