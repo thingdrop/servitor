@@ -2,7 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, Like } from 'typeorm';
 import { Model } from './model.entity';
-import { CreateModelDto, GetModelsFilterDto } from './dto';
+import { CreateModelDto, UpdateModelDto, GetModelsFilterDto } from './dto';
 import { ModelStatus } from './types';
 import { JwtService } from '../auth';
 import { File, FileService } from '../file';
@@ -85,5 +85,12 @@ export class ModelService {
 
   saveModel(model: Model) {
     return this.modelRepository.save(model);
+  }
+
+  async updateModel(id: string, updateModelDto: UpdateModelDto) {
+    const model = await this.getModelById(id);
+    model.status = updateModelDto.status;
+    await this.modelRepository.save(model);
+    return model;
   }
 }

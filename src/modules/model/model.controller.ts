@@ -10,12 +10,13 @@ import {
   UseGuards,
   Sse,
   MessageEvent,
+  Put,
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { Model } from './model.entity';
 import { ModelService } from './model.service';
 import { FileGuard } from '../file/guards';
-import { CreateModelDto, GetModelsFilterDto } from './dto';
+import { CreateModelDto, UpdateModelDto, GetModelsFilterDto } from './dto';
 import { interval, Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { FileService, CreateFileDto } from '../file';
@@ -75,5 +76,10 @@ export class ModelController {
   @Get()
   getModels(@Query() filterDto: GetModelsFilterDto): Promise<Model[]> {
     return this.modelService.getModels(filterDto);
+  }
+
+  @Put('/:id')
+  updateModel(@Param('id') id: string, @Body() updateModelDto: UpdateModelDto) {
+    return this.modelService.updateModel(id, updateModelDto);
   }
 }
