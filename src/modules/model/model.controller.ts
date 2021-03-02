@@ -72,6 +72,11 @@ export class ModelController {
     return this.modelService.getModels(filterDto);
   }
 
+  @Get('/:id/file')
+  getModelFile(@Param('id') id: string) {
+    return this.modelService.getModelFile(id);
+  }
+
   @Put('/:id')
   updateModel(@Param('id') id: string, @Body() updateModelDto: UpdateModelDto) {
     return this.modelService.updateModel(id, updateModelDto);

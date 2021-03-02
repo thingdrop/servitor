@@ -6,9 +6,15 @@ import { FileModule } from '../file';
 import { ModelController } from './model.controller';
 import { ModelHandlerService } from './model-handler.service';
 import { AwsModule } from '../aws';
+import { PrintConfigModule } from '../print-config';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Model]), FileModule, AwsModule],
+  imports: [
+    TypeOrmModule.forFeature([Model]),
+    FileModule,
+    PrintConfigModule,
+    AwsModule,
+  ],
   providers: [ModelService, ModelHandlerService],
   exports: [ModelService, ModelHandlerService],
   controllers: [ModelController],

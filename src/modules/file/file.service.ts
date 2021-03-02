@@ -18,10 +18,10 @@ export class FileService {
     private s3Service: S3Service,
   ) {}
 
-  async createFile(id: string, createFileDto: CreateFileDto): Promise<File> {
+  async createFile(model: any, createFileDto: CreateFileDto): Promise<File> {
     const file = this.fileRepository.create(createFileDto);
 
-    file.modelId = id;
+    file.model = model;
     file.status = FileStatus.CREATED;
     const key = this.createFileKey(file.name);
     file.key = key;
@@ -30,7 +30,7 @@ export class FileService {
 
     const contentType = this.getContentType(file.name);
     const postPolicy = this.createPresignedPostRequest({
-      metadata: { modelId: id },
+      metadata: { modelId: model.id },
       key,
       contentType,
       expires: 60 * 60,

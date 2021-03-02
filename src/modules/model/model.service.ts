@@ -6,6 +6,7 @@ import { CreateModelDto, UpdateModelDto, GetModelsFilterDto } from './dto';
 import { ModelStatus } from './types';
 import { JwtService } from '../auth';
 import { CreateFileDto, File, FileService } from '../file';
+import { PrintConfigService } from '../print-config';
 
 @Injectable()
 export class ModelService {
@@ -13,6 +14,7 @@ export class ModelService {
     @InjectRepository(Model)
     private modelRepository: Repository<Model>,
     private fileService: FileService,
+    private printConfigService: PrintConfigService,
     private jwtService: JwtService,
   ) {}
 
@@ -34,12 +36,11 @@ export class ModelService {
   }
 
   async createModelFile(id, createFileDto: CreateFileDto) {
-    const [model, file] = await Promise.all([
-      this.getModelById(id),
-      this.fileService.createFile(id, createFileDto),
-    ]);
-    model.fileId = file.id;
-    await this.modelRepository.save(model);
+    const model = await this.getModelById(id);
+    const file = await this.fileService.createFile(model, createFileDto);
+    // model.file = file;
+    // console.log({ model });
+    // await this.modelRepository.save(model);
     return file;
   }
 
@@ -86,10 +87,16 @@ export class ModelService {
   }
 
   async getModelById(id: string): Promise<Model> {
-    const model = await this.modelRepository.findOne({ where: { id } });
+    const model = await this.modelRepository.findOne({
+      where: { id },
+      relations: ['file'],
+    });
+    console.log({ model });
+    // const file = await this.fileService.getFileByModelId(id);
     if (!model) {
       throw new NotFoundException();
     }
+    // model.file = file;
     return model;
   }
 
