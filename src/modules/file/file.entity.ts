@@ -14,9 +14,6 @@ export class File extends BaseEntity {
   @OneToOne(() => Model, (model) => model.file)
   model: Model;
 
-  // @Column()
-  // modelId: string;
-
   /* Fields */
   @Column()
   @IsString()
