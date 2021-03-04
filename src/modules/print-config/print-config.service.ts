@@ -1,8 +1,8 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { CreatePrintConfigDto } from './dto/create-print-config.dto';
-import { UpdatePrintConfigDto } from './dto/update-print-config.dto';
+import { Model } from '../model';
+import { CreatePrintConfigInput, UpdatePrintConfigInput } from './inputs';
 import { PrintConfig } from './print-config.entity';
 
 @Injectable()
@@ -11,9 +11,26 @@ export class PrintConfigService {
     @InjectRepository(PrintConfig)
     private printConfigRepository: Repository<PrintConfig>,
   ) {}
-  async create(createPrintConfigDto: CreatePrintConfigDto) {
-    const printConfig = this.printConfigRepository.create(createPrintConfigDto);
+  async create(model: Model, createPrintConfigInput: CreatePrintConfigInput) {
+    const printConfig = this.printConfigRepository.create(
+      createPrintConfigInput,
+    );
+    printConfig.model = model;
     await this.printConfigRepository.save(printConfig);
+    return printConfig;
+  }
+
+  createPrintConfig(createPrintConfigInput: CreatePrintConfigInput) {
+    return this.printConfigRepository.create(createPrintConfigInput);
+  }
+
+  async getPrintConfigById(id: string) {
+    const printConfig = await this.printConfigRepository.findOne({
+      where: { id },
+    });
+    if (!printConfig) {
+      throw new NotFoundException();
+    }
     return printConfig;
   }
 
@@ -25,8 +42,14 @@ export class PrintConfigService {
     return `This action returns a #${id} printConfig`;
   }
 
-  update(id: number, updatePrintConfigDto: UpdatePrintConfigDto) {
-    return `This action updates a #${id} printConfig`;
+  async update(id: string, updatePrintConfigInput: UpdatePrintConfigInput) {
+    const printConfig = await this.getPrintConfigById(id);
+    const updatedPrintConfig = Object.assign(
+      printConfig,
+      updatePrintConfigInput,
+    );
+    await this.printConfigRepository.save(updatedPrintConfig);
+    return updatedPrintConfig;
   }
 
   remove(id: number) {

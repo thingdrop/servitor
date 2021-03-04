@@ -1,7 +1,6 @@
+import { InputType, Field, registerEnumType } from '@nestjs/graphql';
 import {
-  IsBoolean,
   IsString,
-  Length,
   IsInt,
   IsNumber,
   IsOptional,
@@ -14,32 +13,32 @@ import {
   ModelSupports,
   ModelSupportsType,
   ModelBuildPlateAdhesion,
-  ModelLicense,
 } from '../types';
 
-export class CreateModelDto {
-  @IsString()
-  @Length(4, 20)
-  name: string;
+registerEnumType(ModelFilament, {
+  name: 'ModelFilament',
+});
 
-  @IsString()
-  description: string;
+registerEnumType(ModelSupports, {
+  name: 'ModelSupports',
+});
 
-  @IsBoolean()
-  isPrivate: boolean;
+registerEnumType(ModelSupportsType, {
+  name: 'ModelSupportsType',
+});
 
+registerEnumType(ModelBuildPlateAdhesion, {
+  name: 'ModelBuildPlateAdhesion',
+});
+
+@InputType()
+export class CreatePrintConfigInput {
   /* Optional Fields */
   /* ABS, PLA, etc */
   @IsString()
   @IsEnum(ModelFilament)
   @IsOptional()
   filamentType?: ModelFilament;
-
-  /* Number of individual printable parts a model contains */
-  @IsInt()
-  @Min(0)
-  @IsOptional()
-  numParts?: number;
 
   /* Layer height - 0.1mm and up */
   @IsNumber()
@@ -56,12 +55,14 @@ export class CreateModelDto {
   infill?: number;
 
   /* What type of supports should be used */
+  @Field(() => ModelSupportsType)
   @IsString()
   @IsEnum(ModelSupportsType)
   @IsOptional()
   supportType?: ModelSupportsType;
 
   /* Where supports should be added */
+  @Field(() => ModelSupports)
   @IsString()
   @IsEnum(ModelSupports)
   @IsOptional()
@@ -75,25 +76,14 @@ export class CreateModelDto {
   printTemp?: number;
 
   /* Type of build plate adhesion recommended - Skirt, brim, raft, etc */
+  @Field(() => ModelBuildPlateAdhesion)
   @IsString()
   @IsEnum(ModelBuildPlateAdhesion)
   @IsOptional()
   buildPlateAdhesion?: ModelBuildPlateAdhesion;
 
-  /* Model usage/remix restrictions - MIT, Apache, etc */
-  @IsString()
-  @IsEnum(ModelLicense)
-  @IsOptional()
-  license?: ModelLicense;
-
-  // TODO How do we want to handle this? Model ID?
-  /* If this model is a remix of another model, point us to that model */
-  @IsString()
-  @IsOptional()
-  remixOf?: string;
-
   /* Secondary description for any other print recommendations we don't have support for */
   @IsString()
   @IsOptional()
-  otherDescription?: string;
+  notes?: string;
 }

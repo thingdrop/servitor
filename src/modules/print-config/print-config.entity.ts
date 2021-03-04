@@ -1,5 +1,13 @@
 import { Column, Entity, OneToOne } from 'typeorm';
-import { IsInt, IsNumber, IsOptional, IsString } from 'class-validator';
+import {
+  IsInt,
+  IsNumber,
+  IsOptional,
+  IsPositive,
+  IsString,
+  Max,
+  Min,
+} from 'class-validator';
 import { BaseEntity } from '../../common/entities';
 import { Model } from '../model';
 import {
@@ -7,8 +15,10 @@ import {
   ModelFilament,
   ModelSupports,
   ModelSupportsType,
-} from '../model';
+} from './types';
+import { ObjectType } from '@nestjs/graphql';
 
+@ObjectType('PrintConfig')
 @Entity()
 export class PrintConfig extends BaseEntity {
   /* Relations */
@@ -31,6 +41,8 @@ export class PrintConfig extends BaseEntity {
   /* Percentage infill recommended - 0-100 */
   @Column({ nullable: true })
   @IsInt()
+  @Min(0)
+  @Max(100)
   @IsOptional()
   infill?: number;
 
@@ -49,6 +61,7 @@ export class PrintConfig extends BaseEntity {
   /* Temperature to print the model - largely material/printer dependent */
   @Column({ nullable: true })
   @IsInt()
+  @IsPositive()
   @IsOptional()
   printTemp?: number;
 

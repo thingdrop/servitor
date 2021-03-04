@@ -1,11 +1,18 @@
+import { Field, InputType, registerEnumType } from '@nestjs/graphql';
 import { IsOptional, IsNotEmpty, IsEnum } from 'class-validator';
 import { ModelStatus } from '../types';
 
-export class GetModelsFilterDto {
+registerEnumType(ModelStatus, {
+  name: 'ModelStatus',
+});
+
+@InputType()
+export class GetModelsFilterInput {
   @IsOptional()
   @IsNotEmpty()
   search?: string;
 
+  @Field(() => ModelStatus)
   @IsOptional()
   @IsNotEmpty()
   @IsEnum(ModelStatus)

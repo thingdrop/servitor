@@ -16,10 +16,14 @@ import { ApiTags } from '@nestjs/swagger';
 import { Model } from './model.entity';
 import { ModelService } from './model.service';
 import { FileGuard } from '../file/guards';
-import { CreateModelDto, UpdateModelDto, GetModelsFilterDto } from './dto';
+import {
+  CreateModelInput,
+  UpdateModelInput,
+  GetModelsFilterInput,
+} from './inputs';
 import { interval, Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
-import { FileService, CreateFileDto } from '../file';
+import { FileService, CreateFileInput } from '../file';
 
 @ApiTags('Models')
 @Controller('models')
@@ -41,8 +45,8 @@ export class ModelController {
 
   /* Create a model */
   @Post()
-  createModel(@Body() createModelDto: CreateModelDto): Promise<Model> {
-    return this.modelService.createModel(createModelDto);
+  createModel(@Body() createModelInput: CreateModelInput): Promise<Model> {
+    return this.modelService.createModel(createModelInput);
   }
 
   /**
@@ -55,9 +59,9 @@ export class ModelController {
   @Post('/:id/file')
   createModelFile(
     @Param('id') id: string,
-    @Body() createFileDto: CreateFileDto,
+    @Body() createFileInput: CreateFileInput,
   ): Promise<any> {
-    return this.modelService.createModelFile(id, createFileDto);
+    return this.modelService.createModelFile(id, createFileInput);
   }
 
   /* Retrieve a model */
@@ -68,8 +72,8 @@ export class ModelController {
 
   /* Retrieve all or subset of models */
   @Get()
-  getModels(@Query() filterDto: GetModelsFilterDto): Promise<Model[]> {
-    return this.modelService.getModels(filterDto);
+  getModels(@Query() filterInput: GetModelsFilterInput): Promise<Model[]> {
+    return this.modelService.getModels(filterInput);
   }
 
   @Get('/:id/file')
@@ -78,7 +82,10 @@ export class ModelController {
   }
 
   @Put('/:id')
-  updateModel(@Param('id') id: string, @Body() updateModelDto: UpdateModelDto) {
-    return this.modelService.updateModel(id, updateModelDto);
+  updateModel(
+    @Param('id') id: string,
+    @Body() updateModelInput: UpdateModelInput,
+  ) {
+    return this.modelService.updateModel(id, updateModelInput);
   }
 }

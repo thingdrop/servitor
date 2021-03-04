@@ -1,26 +1,33 @@
+import { ObjectType } from '@nestjs/graphql';
 import { Entity, Column, OneToOne, JoinColumn } from 'typeorm';
-import { Expose } from 'class-transformer';
+import { Exclude, Expose } from 'class-transformer';
 import { IsString, IsBoolean, IsOptional, IsUrl } from 'class-validator';
 import { BaseEntity } from '../../common/entities';
 import { File } from '../file';
 import { ModelStatus, ModelLicense } from './types';
 import { PrintConfig } from '../print-config';
 
+@ObjectType('Model')
 @Entity()
 export class Model extends BaseEntity {
   /* Relations */
   @OneToOne(() => File, (file) => file.model)
-  @JoinColumn({ name: 'fileId' })
+  @JoinColumn({ referencedColumnName: 'id' })
   file?: File;
 
+  @Exclude()
+  @Column({ nullable: true })
+  fileId: string;
+
   @OneToOne(() => PrintConfig, (printConfig) => printConfig.model, {
-    eager: true,
+    cascade: true,
   })
-  @JoinColumn({ name: 'printConfigId' })
+  @JoinColumn({ referencedColumnName: 'id' })
   printConfig?: PrintConfig;
 
-  // @Column({ nullable: true })
-  // fileId: string;
+  @Exclude()
+  @Column({ nullable: true })
+  printConfigId: string;
 
   /* Fields */
   @Column()
@@ -52,4 +59,5 @@ export class Model extends BaseEntity {
   @Expose()
   @IsString()
   uploadToken?: string;
+  model: Promise<PrintConfig>;
 }

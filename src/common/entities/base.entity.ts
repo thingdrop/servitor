@@ -3,18 +3,20 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
   BaseEntity as TypeOrmBaseEntity,
-  Generated,
-  Column,
+  Unique,
 } from 'typeorm';
 import { Exclude } from 'class-transformer';
+import { ObjectType, HideField } from '@nestjs/graphql';
 
+@ObjectType()
+@Unique(['id'])
 export abstract class BaseEntity extends TypeOrmBaseEntity {
+  @HideField()
   @Exclude()
   @PrimaryGeneratedColumn()
   _id: string;
 
-  @Column()
-  @Generated('uuid')
+  @PrimaryGeneratedColumn('uuid')
   id: string;
 
   @CreateDateColumn()
