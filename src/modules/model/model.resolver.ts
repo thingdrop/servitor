@@ -36,7 +36,7 @@ export class ModelResolver {
 
   @Mutation(() => File)
   @UseGuards(FileGuard)
-  CreateModelFile(
+  createModelFile(
     @Args('id') id: string,
     @Args('createFileInput') createFileInput: CreateFileInput,
   ): Promise<File> {
