@@ -1,6 +1,8 @@
+import { InputType } from '@nestjs/graphql';
 import { IsNumber, IsString } from 'class-validator';
 
-export class CreateFileDto {
+@InputType()
+export class CreateFileInput {
   @IsString()
   name: string;
 

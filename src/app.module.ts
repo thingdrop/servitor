@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { GraphQLModule } from '@nestjs/graphql';
 import { ModelModule } from './modules/model';
 import { AuthModule } from './modules/auth';
 import { AwsModule } from './modules/aws';
@@ -28,6 +29,12 @@ const {
       database: DB_DATABASE,
       autoLoadEntities: true,
       synchronize: true,
+    }),
+    GraphQLModule.forRoot({
+      autoSchemaFile: true,
+      context: ({ req }) => ({ req }),
+      playground: true,
+      debug: true,
     }),
     ModelModule,
     /* Core Modules */

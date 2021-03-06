@@ -17,9 +17,9 @@ export class ModelHandlerService {
 
   async listen() {
     /* Initialize queue listener */
-    const { AWS_MODEL_PROCESS_QUEUE_URL } = process.env;
+    const { AWS_SERVITOR_QUEUE } = process.env;
     this.listener = this.sqsService.createListener(
-      AWS_MODEL_PROCESS_QUEUE_URL,
+      AWS_SERVITOR_QUEUE,
       this.handleEvent,
     );
     this.listener.start();
@@ -35,10 +35,8 @@ export class ModelHandlerService {
       const body = JSON.parse(message.Body);
       const { modelId, file: fileObj } = body;
 
-      const [model, file] = await Promise.all([
-        this.modelService.getModelById(modelId),
-        this.fileService.getFileByModelId(modelId),
-      ]);
+      const model = await this.modelService.getModelById(modelId);
+      const file = await this.fileService.getFileById(model.fileId);
 
       if (!file) {
         throw new NotFoundException(

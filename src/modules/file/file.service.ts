@@ -8,7 +8,7 @@ import { Repository } from 'typeorm';
 import { S3Service, SignedUrlOptions } from '../aws';
 import { File } from './file.entity';
 import { ModelFileTypes, FileStatus } from './types';
-import { CreateFileDto, UpdateFileDto } from './dto';
+import { CreateFileInput, UpdateFileInput } from './inputs';
 
 @Injectable()
 export class FileService {
@@ -18,10 +18,13 @@ export class FileService {
     private s3Service: S3Service,
   ) {}
 
-  async createFile(id: string, createFileDto: CreateFileDto): Promise<File> {
-    const file = this.fileRepository.create(createFileDto);
+  async createFile(
+    model: any,
+    createFileInput: CreateFileInput,
+  ): Promise<File> {
+    const file = this.fileRepository.create(createFileInput);
 
-    file.modelId = id;
+    file.model = model;
     file.status = FileStatus.CREATED;
     const key = this.createFileKey(file.name);
     file.key = key;
@@ -30,7 +33,7 @@ export class FileService {
 
     const contentType = this.getContentType(file.name);
     const postPolicy = this.createPresignedPostRequest({
-      metadata: { modelId: id },
+      metadata: { modelId: model.id },
       key,
       contentType,
       expires: 60 * 60,
@@ -46,7 +49,7 @@ export class FileService {
   }
 
   async getFileByModelId(id: string): Promise<File> {
-    const file = await this.fileRepository.findOne({ where: { modelId: id } });
+    const file = await this.fileRepository.findOne({ where: { id: id } });
     if (!file) {
       throw new NotFoundException();
     }
@@ -61,11 +64,11 @@ export class FileService {
     return file;
   }
 
-  async updateFile(updateFileDto: UpdateFileDto) {
+  async updateFile(updateFileInput: UpdateFileInput) {
     const file = await this.fileRepository.findOne({
-      where: { key: updateFileDto.key },
+      where: { key: updateFileInput.key },
     });
-    const { size, eTag, bucket } = updateFileDto;
+    const { size, eTag, bucket } = updateFileInput;
     file.size = size;
     file.eTag = eTag;
     file.bucket = bucket;

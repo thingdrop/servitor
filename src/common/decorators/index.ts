@@ -1,1 +1,1 @@
-export { GetToken } from './get-token.decorator';
+export { Token } from './get-token.decorator';

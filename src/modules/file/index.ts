@@ -1,4 +1,4 @@
-export { CreateFileDto, UpdateFileDto } from './dto';
+export { CreateFileInput, UpdateFileInput } from './inputs';
 export {
   FileModuleOptions,
   FILE_OPTIONS,

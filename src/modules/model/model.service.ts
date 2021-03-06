@@ -2,10 +2,15 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, Like } from 'typeorm';
 import { Model } from './model.entity';
-import { CreateModelDto, GetModelsFilterDto } from './dto';
+import {
+  CreateModelInput,
+  UpdateModelInput,
+  GetModelsFilterInput,
+} from './inputs';
 import { ModelStatus } from './types';
 import { JwtService } from '../auth';
-import { File, FileService } from '../file';
+import { CreateFileInput, File, FileService } from '../file';
+import { PrintConfigService, UpdatePrintConfigInput } from '../print-config';
 
 @Injectable()
 export class ModelService {
@@ -13,19 +18,22 @@ export class ModelService {
     @InjectRepository(Model)
     private modelRepository: Repository<Model>,
     private fileService: FileService,
+    private printConfigService: PrintConfigService,
     private jwtService: JwtService,
   ) {}
 
-  async createModel(createModelDto: CreateModelDto): Promise<any> {
-    const model = this.modelRepository.create(createModelDto);
+  async createModel(createModelInput: CreateModelInput): Promise<any> {
+    const model = this.modelRepository.create(createModelInput);
+
     model.status = ModelStatus.CREATED;
+    /* Create an empty printConfig by default */
+    model.printConfig = this.printConfigService.createPrintConfig({});
     await this.modelRepository.save(model);
 
     const tokenPayload = {
       modelId: model.id,
       action: 'UPLOAD',
     };
-
     model.uploadToken = this.jwtService.signToken(tokenPayload, {
       expiresIn: process.env.UPLOAD_TOKEN_EXPIRATION,
     });
@@ -33,8 +41,21 @@ export class ModelService {
     return model;
   }
 
-  async getModels(filterDto: GetModelsFilterDto): Promise<any> {
-    const { search, status, page, limit, sortby, orderby } = filterDto;
+  async createModelFile(
+    token: any,
+    id: string,
+    createFileInput: CreateFileInput,
+  ): Promise<File> {
+    if (token.modelId !== id) {
+      throw new NotFoundException();
+    }
+    const model = await this.getModelById(id);
+    const file = await this.fileService.createFile(model, createFileInput);
+    return file;
+  }
+
+  async getModels(filterInput: GetModelsFilterInput): Promise<any> {
+    const { search, status, page, limit, sortby, orderby } = filterInput;
 
     const limitValue = parseInt(limit, 10) || 20;
     const pageValue = parseInt(page, 10) || 1;
@@ -76,7 +97,10 @@ export class ModelService {
   }
 
   async getModelById(id: string): Promise<Model> {
-    const model = await this.modelRepository.findOne({ where: { id } });
+    const model = await this.modelRepository.findOne({
+      where: { id },
+      relations: ['file', 'printConfig'],
+    });
     if (!model) {
       throw new NotFoundException();
     }
@@ -85,5 +109,25 @@ export class ModelService {
 
   saveModel(model: Model) {
     return this.modelRepository.save(model);
+  }
+
+  async updateModelPrintConfig(
+    id: string,
+    updatePrintConfigInput: UpdatePrintConfigInput,
+  ) {
+    const model = await this.getModelById(id);
+    const printConfig = await this.printConfigService.create(
+      model,
+      updatePrintConfigInput,
+    );
+    model.printConfig = printConfig;
+    return model;
+  }
+
+  async updateModel(id: string, updateModelInput: UpdateModelInput) {
+    const model = await this.getModelById(id);
+    const updatedModel = Object.assign(model, updateModelInput);
+    await this.modelRepository.save(updatedModel);
+    return updatedModel;
   }
 }
