@@ -20,6 +20,7 @@ import {
   PrintConfigService,
   UpdatePrintConfigInput,
 } from '../print-config';
+import { Token } from '../../common/decorators';
 
 @Resolver(() => Model)
 export class ModelResolver {
@@ -37,10 +38,11 @@ export class ModelResolver {
   @Mutation(() => File)
   @UseGuards(FileGuard)
   createModelFile(
+    @Token() token: any,
     @Args('id') id: string,
     @Args('createFileInput') createFileInput: CreateFileInput,
   ): Promise<File> {
-    return this.modelService.createModelFile(id, createFileInput);
+    return this.modelService.createModelFile(token, id, createFileInput);
   }
 
   @Query(() => [Model])

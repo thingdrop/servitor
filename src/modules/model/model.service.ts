@@ -41,7 +41,14 @@ export class ModelService {
     return model;
   }
 
-  async createModelFile(id, createFileInput: CreateFileInput): Promise<File> {
+  async createModelFile(
+    token: any,
+    id: string,
+    createFileInput: CreateFileInput,
+  ): Promise<File> {
+    if (token.modelId !== id) {
+      throw new NotFoundException();
+    }
     const model = await this.getModelById(id);
     const file = await this.fileService.createFile(model, createFileInput);
     return file;

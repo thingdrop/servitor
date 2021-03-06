@@ -4,7 +4,7 @@ import { ModelService } from './model.service';
 import { Model } from './model.entity';
 import { FileModule } from '../file';
 import { ModelResolver } from './model.resolver';
-import { ModelController } from './model.controller';
+// import { ModelController } from './model.controller';
 import { ModelHandlerService } from './model-handler.service';
 import { AwsModule } from '../aws';
 import { PrintConfigModule } from '../print-config';
@@ -18,6 +18,6 @@ import { PrintConfigModule } from '../print-config';
   ],
   providers: [ModelService, ModelResolver, ModelHandlerService],
   exports: [ModelService, ModelHandlerService],
-  controllers: [ModelController],
+  controllers: [],
 })
 export class ModelModule {}

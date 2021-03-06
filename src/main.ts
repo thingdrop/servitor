@@ -6,6 +6,7 @@ import { ValidationPipe, Logger } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import * as helmet from 'helmet';
 import { AppModule } from './app.module';
+import { ModelHandlerService } from './modules/model/model-handler.service';
 
 const { PORT } = process.env;
 
@@ -41,6 +42,9 @@ async function bootstrap() {
 
   /* Server Start */
   await app.listen(PORT);
+
+  const modelHandlerService: ModelHandlerService = app.get(ModelHandlerService);
+  modelHandlerService.listen();
 
   const logger = new Logger();
   logger.log(`Listening on port: ${PORT}`);

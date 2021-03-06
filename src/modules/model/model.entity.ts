@@ -48,7 +48,7 @@ export class Model extends BaseEntity {
 
   @Column({ nullable: true })
   @IsUrl()
-  imagePreview: string;
+  imagePreview?: string;
 
   /* Model usage/remix restrictions - MIT, Apache, etc */
   @Column('enum', { enum: ModelLicense, nullable: true })
