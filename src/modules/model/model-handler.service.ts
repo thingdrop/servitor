@@ -35,31 +35,32 @@ export class ModelHandlerService {
       const body = JSON.parse(message.Body);
       const { modelId, file: fileObj } = body;
 
-      const model = await this.modelService.getModelById(modelId);
-      const file = await this.fileService.getFileById(model.fileId);
+      const model = await this.modelService.getById(modelId);
+      const files = await this.fileService.getFilesByModelId(modelId);
+
+      const { originalKey, ...fileInput } = fileObj;
+
+      const file = files.find((file) => file.key === originalKey);
 
       if (!file) {
         throw new NotFoundException(
           `File with key: ${fileObj.key} was not found for model: ${model.id}. It's possible this file has already been processed.`,
         );
       }
-      const { key, imagePreview, eTag, size, bucket } = fileObj;
       // Update file entity with new key, thumbail URL, etc.
-      file.name = `${file.name}.glb`;
-      file.key = key;
-      file.imagePreview = imagePreview;
-      file.eTag = eTag;
-      file.size = size;
-      file.bucket = bucket;
-      file.status = FileStatus.COMPLETE;
-
-      /* Check model status */
-      model.status = ModelStatus.COMPLETE;
+      const updateFileInput = {
+        ...fileInput,
+        name: this.changeExtension(file.name, 'glb'),
+        status: FileStatus.COMPLETE,
+      };
 
       /* Save model/file */
       await Promise.all([
-        this.modelService.saveModel(model),
-        this.fileService.saveFile(file),
+        this.modelService.update(model.id, {
+          fileId: file.id,
+          status: ModelStatus.COMPLETE,
+        }),
+        this.fileService.update(file.id, updateFileInput),
       ]);
     } catch (error) {
       this.logger.error(error);
@@ -67,14 +68,13 @@ export class ModelHandlerService {
     }
   };
 
-  createKey(folder: string, filename: string, ext: string): string {
-    const name: string = filename
-      .split('/')
-      .slice(1)
-      .join('')
-      .split('.')
-      .slice(0, -1)
-      .join('');
-    return `${folder}/${name}.${ext}`;
+  changeExtension(filename: string, extension: string): string {
+    if (extension.includes('.')) {
+      throw new Error('changeExtension: extension cannot contain (.)');
+    }
+    const pos = filename.lastIndexOf('.');
+    const newFilename =
+      filename.substr(0, pos < 0 ? filename.length : pos) + `.${extension}`;
+    return newFilename;
   }
 }

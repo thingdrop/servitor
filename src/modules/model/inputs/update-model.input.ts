@@ -1,4 +1,4 @@
-import { IsEnum, IsOptional, IsString } from 'class-validator';
+import { IsEnum, IsOptional, IsString, IsUUID } from 'class-validator';
 import { CreateModelInput } from './create-model.input';
 import { ModelStatus } from '../types';
 import { InputType, PartialType } from '@nestjs/graphql';
@@ -9,4 +9,8 @@ export class UpdateModelInput extends PartialType(CreateModelInput) {
   @IsOptional()
   @IsEnum(ModelStatus)
   status?: string;
+
+  @IsUUID()
+  @IsOptional()
+  fileId?: string;
 }

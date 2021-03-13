@@ -1,4 +1,3 @@
-import { UseGuards } from '@nestjs/common';
 import {
   Resolver,
   Query,
@@ -15,11 +14,8 @@ import {
   UpdateModelInput,
 } from './inputs';
 import { CreateFileInput, File, FileGuard, FileService } from '../file';
-import {
-  PrintConfig,
-  PrintConfigService,
-  UpdatePrintConfigInput,
-} from '../print-config';
+import { PrintConfig, PrintConfigService } from '../print-config';
+import { UseGuards } from '@nestjs/common';
 import { Token } from '../../common/decorators';
 
 @Resolver(() => Model)
@@ -32,12 +28,12 @@ export class ModelResolver {
 
   @Mutation(() => Model)
   createModel(@Args('createModelInput') createModelInput: CreateModelInput) {
-    return this.modelService.createModel(createModelInput);
+    return this.modelService.create(createModelInput);
   }
 
   @Mutation(() => File)
   @UseGuards(FileGuard)
-  createModelFile(
+  createFile(
     @Token() token: any,
     @Args('id') id: string,
     @Args('createFileInput') createFileInput: CreateFileInput,
@@ -54,33 +50,30 @@ export class ModelResolver {
 
   @Query(() => Model)
   model(@Args('id') id: string): Promise<Model> {
-    return this.modelService.getModelById(id);
+    return this.modelService.getById(id);
   }
 
+  /* TODO: auth guard */
   @Mutation(() => Model)
   updateModel(
     @Args('id') id: string,
     @Args('updateModelInput') updateModelInput: UpdateModelInput,
   ): Promise<Model> {
-    return this.modelService.updateModel(id, updateModelInput);
-  }
-
-  @Mutation(() => Model)
-  updatePrintConfig(
-    @Args('id') id: string,
-    @Args('updatePrintConfigInput')
-    updatePrintConfigInput: UpdatePrintConfigInput,
-  ): Promise<Model> {
-    return this.modelService.updateModelPrintConfig(id, updatePrintConfigInput);
+    return this.modelService.update(id, updateModelInput);
   }
 
   @ResolveField('file', () => File)
-  file(@Parent() model: Model): Promise<File> {
-    return this.fileService.getFileById(model.fileId);
+  file(@Parent() model: Model): File | null {
+    if (model.fileId) {
+      return model.files.find((file) => file.id === model.fileId);
+    }
+    if (model.files.length === 1) {
+      return model.files[0];
+    }
   }
 
-  @ResolveField('printConfig', () => File)
-  printConfig(@Parent() model: Model): Promise<PrintConfig> {
-    return this.printConfigService.getPrintConfigById(model.printConfigId);
-  }
+  // @ResolveField('printConfig', () => File)
+  // printConfig(@Parent() model: Model): Promise<PrintConfig> {
+  //   return this.printConfigService.getById(model.printConfigId);
+  // }
 }

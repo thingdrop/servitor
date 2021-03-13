@@ -1,9 +1,8 @@
-import { Entity, Column, OneToOne } from 'typeorm';
-import { IsString, IsNumber, IsUrl, IsObject } from 'class-validator';
+import { Entity, Column, ManyToOne, JoinColumn } from 'typeorm';
+import { IsString, IsNumber, IsUrl, IsObject, IsHash } from 'class-validator';
 import graphqlTypeJson from 'graphql-type-json';
 import { BaseEntity } from '../../common/entities';
 import { Model } from '../model/model.entity';
-import { Exclude, Expose } from 'class-transformer';
 import { FileStatus } from './types';
 import { Field, HideField, ObjectType } from '@nestjs/graphql';
 
@@ -11,8 +10,13 @@ import { Field, HideField, ObjectType } from '@nestjs/graphql';
 @Entity()
 export class File extends BaseEntity {
   /* Relations */
-  @OneToOne(() => Model, (model) => model.file)
+  @ManyToOne(() => Model, (model) => model.files)
+  @JoinColumn({ referencedColumnName: 'id' })
   model: Model;
+
+  @Column()
+  @IsString()
+  modelId: string;
 
   /* Fields */
   @Column()
@@ -32,30 +36,28 @@ export class File extends BaseEntity {
   @IsString()
   imagePreview?: string;
 
-  @HideField()
-  @Exclude()
+  // @HideField()
   @Column({ nullable: true })
   @IsString()
   key: string;
 
-  @HideField()
-  @Exclude()
+  // @HideField()
   @Column({ nullable: true })
   @IsString()
   bucket: string;
 
-  @HideField()
-  @Exclude()
+  // @HideField()
   @Column({ nullable: true })
-  @IsString()
+  @IsHash('md5')
   eTag: string;
 
   @Field(() => graphqlTypeJson, { nullable: true })
-  @Expose()
   @IsObject()
   postPolicy?: any;
 
-  @Expose()
   @IsString()
   contentType?: string;
+
+  @IsUrl()
+  downloadUrl?: string;
 }

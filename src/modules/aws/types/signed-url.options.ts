@@ -3,4 +3,5 @@ export interface SignedUrlOptions {
   key: string;
   contentType?: string;
   expires?: number;
+  bucket?: string;
 }

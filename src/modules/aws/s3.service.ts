@@ -35,9 +35,9 @@ export class S3Service {
   }
 
   createSignedDownloadUrl(options: SignedUrlOptions) {
-    const { expires, key } = options;
+    const { expires, key, bucket } = options;
     return this.s3.getSignedUrl('getObject', {
-      Bucket: process.env.AWS_S3_BUCKET_NAME,
+      Bucket: bucket,
       Expires: expires,
       Key: key,
       ResponseContentDisposition: 'attachment',

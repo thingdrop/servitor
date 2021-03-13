@@ -1,5 +1,5 @@
 export interface FileModuleOptions {
-  uploadToken: Token;
+  accessToken: Token;
 }
 
 interface Token {
