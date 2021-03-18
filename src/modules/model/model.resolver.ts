@@ -13,32 +13,20 @@ import {
   CreateModelInput,
   UpdateModelInput,
 } from './inputs';
-import { CreateFileInput, File, FileGuard, FileService } from '../file';
 import { PrintConfig, PrintConfigService } from '../print-config';
-import { UseGuards } from '@nestjs/common';
-import { Token } from '../../common/decorators';
+import { Part, PartService } from '../part';
 
 @Resolver(() => Model)
 export class ModelResolver {
   constructor(
     private modelService: ModelService,
-    private fileService: FileService,
+    private partService: PartService,
     private printConfigService: PrintConfigService,
   ) {}
 
   @Mutation(() => Model)
   createModel(@Args('createModelInput') createModelInput: CreateModelInput) {
     return this.modelService.create(createModelInput);
-  }
-
-  @Mutation(() => File)
-  @UseGuards(FileGuard)
-  createFile(
-    @Token() token: any,
-    @Args('id') id: string,
-    @Args('createFileInput') createFileInput: CreateFileInput,
-  ): Promise<File> {
-    return this.modelService.createModelFile(token, id, createFileInput);
   }
 
   @Query(() => [Model])
@@ -62,18 +50,16 @@ export class ModelResolver {
     return this.modelService.update(id, updateModelInput);
   }
 
-  @ResolveField('file', () => File)
-  file(@Parent() model: Model): File | null {
-    if (model.fileId) {
-      return model.files.find((file) => file.id === model.fileId);
-    }
-    if (model.files.length === 1) {
-      return model.files[0];
-    }
+  @ResolveField('printConfig', () => PrintConfig)
+  printConfig(@Parent() model: Model): Promise<PrintConfig> {
+    return this.printConfigService.getById(model.printConfigId);
   }
 
-  // @ResolveField('printConfig', () => File)
-  // printConfig(@Parent() model: Model): Promise<PrintConfig> {
-  //   return this.printConfigService.getById(model.printConfigId);
-  // }
+  @ResolveField('parts', () => Part)
+  parts(@Parent() model: Model): Promise<Part[]> | Part[] {
+    if (model.parts) {
+      return model.parts;
+    }
+    return this.partService.findAllByModelId(model.id);
+  }
 }

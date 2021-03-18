@@ -3,7 +3,6 @@ import { Query, Resolver, Mutation, Args } from '@nestjs/graphql';
 import { FileService } from './file.service';
 import { File } from './file.entity';
 import { Token } from '../../common/decorators';
-import { FileGuard } from './guards';
 import { CreateFileInput } from './inputs';
 
 @Resolver(() => File)

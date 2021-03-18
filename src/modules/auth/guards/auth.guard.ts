@@ -5,7 +5,7 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { GqlExecutionContext } from '@nestjs/graphql';
-import { JwtService } from '../../auth';
+import { JwtService } from '..';
 
 const tokenPattern = /^Bearer [A-Za-z0-9-_=]+\.[A-Za-z0-9-_=]+\.?[A-Za-z0-9-_.+/=]*$/;
 
@@ -19,7 +19,7 @@ function getTokenFromRequest(request) {
 }
 
 @Injectable()
-export class FileGuard implements CanActivate {
+export class AuthGuard implements CanActivate {
   constructor(private jwtService: JwtService) {}
 
   getRequest(context: ExecutionContext) {

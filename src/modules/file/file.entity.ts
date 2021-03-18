@@ -2,52 +2,44 @@ import { Entity, Column, ManyToOne, JoinColumn } from 'typeorm';
 import { IsString, IsNumber, IsUrl, IsObject, IsHash } from 'class-validator';
 import graphqlTypeJson from 'graphql-type-json';
 import { BaseEntity } from '../../common/entities';
-import { Model } from '../model/model.entity';
 import { FileStatus } from './types';
 import { Field, HideField, ObjectType } from '@nestjs/graphql';
+import { Part } from '../part/part.entity';
 
 @ObjectType('File')
 @Entity()
 export class File extends BaseEntity {
   /* Relations */
-  @ManyToOne(() => Model, (model) => model.files)
+  @ManyToOne(() => Part, (part) => part.files)
   @JoinColumn({ referencedColumnName: 'id' })
-  model: Model;
+  part: Part;
 
   @Column()
   @IsString()
-  modelId: string;
+  partId: string;
 
   /* Fields */
   @Column()
-  @IsString()
-  name: string;
-
-  @Column('enum', { enum: FileStatus, default: FileStatus.CREATED })
-  @IsString()
-  status: string;
-
-  @Column({ nullable: true })
   @IsNumber()
   size: number;
 
-  @Column({ nullable: true })
+  @Column()
   @IsUrl()
   @IsString()
-  imagePreview?: string;
+  image: string;
 
-  // @HideField()
-  @Column({ nullable: true })
+  @HideField()
+  @Column()
   @IsString()
   key: string;
 
-  // @HideField()
-  @Column({ nullable: true })
+  @HideField()
+  @Column()
   @IsString()
   bucket: string;
 
-  // @HideField()
-  @Column({ nullable: true })
+  @HideField()
+  @Column()
   @IsHash('md5')
   eTag: string;
 

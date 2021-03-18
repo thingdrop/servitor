@@ -1,3 +1,12 @@
+## Database Entity Achitecture
+
+- Model: Abstract idea of a 3d thing someone can print.
+- Part: One or more pieces of a model that can be viewed and downloaded.
+- File: A file object of a part. A part only ever has one "current" file to which it points. However, a part can have multiple files that represent previous versions of the part.
+- PrintConfig: Specifications on how to print the model. Can this be on the model AND its parts? Allow a user to set a printConfig for entire model OR individually on each part (one part may need different infill?)
+- ModelGroup (collection?): A group of models related to each other. This is basically a folder
+  - DotA Models: Drow model, jugg model, pudge model.
+
 ## Model Processing Workflow
 
 ### Model Creation and Upload

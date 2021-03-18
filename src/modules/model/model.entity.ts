@@ -1,33 +1,17 @@
 import { HideField, ObjectType } from '@nestjs/graphql';
 import { Entity, Column, OneToOne, JoinColumn, OneToMany } from 'typeorm';
-import {
-  IsString,
-  IsBoolean,
-  IsOptional,
-  IsUrl,
-  IsJWT,
-  IsUUID,
-} from 'class-validator';
+import { IsString, IsBoolean, IsOptional, IsUUID } from 'class-validator';
 import { BaseEntity } from '../../common/entities';
-import { File } from '../file';
 import { ModelStatus, ModelLicense } from './types';
 import { PrintConfig } from '../print-config';
+import { Part } from '../part';
 
 @ObjectType('Model')
 @Entity()
 export class Model extends BaseEntity {
   /* Relations */
-  @OneToMany(() => File, (file) => file.model)
-  files?: File[];
-
-  /* The current file's ID. Consumer should just use file */
-  @HideField()
-  @Column({ nullable: true })
-  @IsUUID()
-  fileId?: string;
-
-  /* Resolve to the latest file*/
-  file?: File;
+  @OneToMany(() => Part, (part) => part.model)
+  parts?: Part[];
 
   @OneToOne(() => PrintConfig, (printConfig) => printConfig.model)
   @JoinColumn({ referencedColumnName: 'id' })
@@ -39,11 +23,11 @@ export class Model extends BaseEntity {
   printConfigId: string;
 
   /* Fields */
-  @Column()
+  @Column({ default: '' })
   @IsString()
   name: string;
 
-  @Column()
+  @Column({ default: '' })
   @IsString()
   description: string;
 
@@ -51,7 +35,7 @@ export class Model extends BaseEntity {
   @IsString()
   status: string;
 
-  @Column()
+  @Column({ default: false })
   @IsBoolean()
   isPrivate: boolean;
 
@@ -61,6 +45,6 @@ export class Model extends BaseEntity {
   @IsOptional()
   license?: string;
 
-  @IsJWT()
-  accessToken?: string;
+  // @IsJWT()
+  // accessToken?: string;
 }

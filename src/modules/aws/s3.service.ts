@@ -23,13 +23,12 @@ export class S3Service {
   }
 
   createSignedUploadUrl(options: SignedUrlOptions) {
-    const { expires, key, metadata, contentType } = options;
+    const { expires, key, metadata } = options;
     return this.s3.getSignedUrl('putObject', {
       Bucket: process.env.AWS_S3_BUCKET_NAME,
       Expires: expires,
       Metadata: metadata,
       Key: key,
-      ContentType: contentType,
       CacheControl: 'public, max-age=31536000',
     });
   }

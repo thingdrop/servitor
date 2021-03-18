@@ -8,50 +8,33 @@ import {
   GetModelsFilterInput,
 } from './inputs';
 import { ModelStatus } from './types';
-import { JwtService } from '../auth';
-import { CreateFileInput, File, FileService } from '../file';
+import { CreateFileInput, File } from '../file';
 import { PrintConfigService } from '../print-config';
+import { PartService } from '../part';
 
 @Injectable()
 export class ModelService {
   constructor(
     @InjectRepository(Model)
     private modelRepository: Repository<Model>,
-    private fileService: FileService,
+    private partService: PartService,
     private printConfigService: PrintConfigService,
-    private jwtService: JwtService,
   ) {}
 
   async create(createModelInput: CreateModelInput): Promise<Model> {
-    const model = this.modelRepository.create(createModelInput);
-
+    const { parts, ...modelAttrs } = createModelInput;
+    const model = this.modelRepository.create(modelAttrs);
     model.status = ModelStatus.CREATED;
     /* Create an empty printConfig by default */
     model.printConfig = await this.printConfigService.create({});
-    await this.modelRepository.save(model);
-
-    const tokenPayload = {
-      modelId: model.id,
-      action: 'UPLOAD',
-    };
-    model.accessToken = this.jwtService.signToken(tokenPayload, {
-      expiresIn: process.env.UPLOAD_TOKEN_EXPIRATION,
-    });
-
-    return model;
-  }
-
-  async createModelFile(
-    token: any,
-    modelId: string,
-    createFileInput: CreateFileInput,
-  ): Promise<File> {
-    /* Verify that the modelId in the accessToken matches the provided model ID */
-    if (token.modelId !== modelId) {
-      throw new NotFoundException();
-    }
-
-    return this.fileService.create(modelId, createFileInput);
+    const savedModel = await this.modelRepository.save(model);
+    /* Create each part w/ a postPolicy */
+    console.log({ createModelInput, parts });
+    const createdParts = await Promise.all(
+      parts.map((part) => this.partService.create(savedModel.id, part)),
+    );
+    savedModel.parts = createdParts;
+    return savedModel;
   }
 
   async getModels(filterInput: GetModelsFilterInput): Promise<Model[]> {
@@ -95,7 +78,7 @@ export class ModelService {
   async getById(id: string): Promise<Model> {
     const model = await this.modelRepository.findOne({
       where: { id },
-      relations: ['files', 'printConfig'],
+      relations: ['parts', 'printConfig'],
     });
     if (!model) {
       throw new NotFoundException();
