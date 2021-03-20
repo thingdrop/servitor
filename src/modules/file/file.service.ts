@@ -5,6 +5,7 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { v4 as uuidv4 } from 'uuid';
 import { S3Service, SignedUrlOptions } from '../aws';
 import { File } from './file.entity';
 import { ModelFileTypes, FileStatus } from './types';
@@ -18,29 +19,9 @@ export class FileService {
     private s3Service: S3Service,
   ) {}
 
-  async createFile(
-    model: any,
-    createFileInput: CreateFileInput,
-  ): Promise<File> {
+  async create(createFileInput: CreateFileInput): Promise<File> {
     const file = this.fileRepository.create(createFileInput);
-
-    file.model = model;
-    file.status = FileStatus.CREATED;
-    const key = this.createFileKey(file.name);
-    file.key = key;
-
     await this.fileRepository.save(file);
-
-    const contentType = this.getContentType(file.name);
-    const postPolicy = this.createPresignedPostRequest({
-      metadata: { modelId: model.id },
-      key,
-      contentType,
-      expires: 60 * 60,
-    });
-
-    file.contentType = contentType;
-    file.postPolicy = postPolicy;
     return file;
   }
 
@@ -48,15 +29,23 @@ export class FileService {
     return this.fileRepository.save(file);
   }
 
-  async getFileByModelId(id: string): Promise<File> {
-    const file = await this.fileRepository.findOne({ where: { id: id } });
+  async findByPartId(partId: string): Promise<File> {
+    const file = await this.fileRepository.findOne({ where: { partId } });
     if (!file) {
       throw new NotFoundException();
     }
     return file;
   }
 
-  async getFileById(id: string) {
+  async findAllByPartId(modelId: string): Promise<File[]> {
+    const files = await this.fileRepository.find({ where: { modelId } });
+    if (!files.length) {
+      throw new NotFoundException();
+    }
+    return files;
+  }
+
+  async findById(id: string) {
     const file = await this.fileRepository.findOne({ where: { id } });
     if (!file) {
       throw new NotFoundException();
@@ -64,56 +53,54 @@ export class FileService {
     return file;
   }
 
-  async updateFile(updateFileInput: UpdateFileInput) {
-    const file = await this.fileRepository.findOne({
-      where: { key: updateFileInput.key },
-    });
-    const { size, eTag, bucket } = updateFileInput;
-    file.size = size;
-    file.eTag = eTag;
-    file.bucket = bucket;
-    await this.fileRepository.save(file);
-    return file;
+  async update(id: string, updateFileInput: UpdateFileInput) {
+    const file = await this.findById(id);
+    const updatedFile = Object.assign(file, updateFileInput);
+    await this.fileRepository.save(updatedFile);
+    return updatedFile;
   }
 
   async downloadFile(id: string): Promise<any> {
-    const file = await this.getFileById(id);
+    const file = await this.findById(id);
     const downloadUrl = this.s3Service.createSignedDownloadUrl({
+      bucket: file.bucket,
       key: file.key,
       expires: 60 /* download links expire in 1 minute */,
     });
-
-    return { downloadUrl, name: file.name };
+    file.downloadUrl = downloadUrl;
+    return file;
   }
 
   createPresignedPostRequest(options: SignedUrlOptions) {
-    const { expires, key, metadata, contentType } = options;
+    const { key, size, expires, metadata } = options;
     return this.s3Service.createPresignedPost({
-      Bucket: process.env.AWS_S3_BUCKET_NAME,
+      Bucket: process.env.AWS_S3_UPLOAD_BUCKET_NAME,
       Fields: {
         key,
         'x-amz-storage-class': process.env.AWS_S3_STORAGE_CLASS,
         'x-amz-meta-model': metadata.modelId,
+        'x-amz-meta-part': metadata.partId,
       },
       Conditions: [
-        { bucket: process.env.AWS_S3_BUCKET_NAME },
         { key },
+        { bucket: process.env.AWS_S3_UPLOAD_BUCKET_NAME },
         { 'x-amz-storage-class': process.env.AWS_S3_STORAGE_CLASS },
         { 'x-amz-meta-model': metadata.modelId },
-        { 'Content-Type': contentType },
-        ['content-length-range', 1, 262144000],
+        ['content-length-range', size, size],
       ],
       Expires: expires,
     });
   }
 
+  /* Create a key like: 2020/04/20/<uuid>.stl */
   createFileKey(filename: string) {
-    const epochTime: string = Date.now().toString();
-    const fileFormattedName = filename
-      .split(' ')
-      .map((word) => word.toLowerCase())
-      .join('-');
-    return `unprocessed/${epochTime}-${fileFormattedName}`;
+    const dateObj = new Date();
+    const year = dateObj.getUTCFullYear();
+    const month = dateObj.getUTCMonth() + 1;
+    const day = dateObj.getUTCDate();
+    const uuid = uuidv4();
+    const extension = filename.split('.').pop().toLowerCase();
+    return `${year}/${month}/${day}/${uuid}.${extension}`;
   }
 
   getContentType(filename: string) {

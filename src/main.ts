@@ -3,10 +3,9 @@ dotenv.config();
 
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe, Logger } from '@nestjs/common';
-import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import * as helmet from 'helmet';
 import { AppModule } from './app.module';
-import { ModelHandlerService } from './modules/model/model-handler.service';
+import { PartEventService } from './modules/part/part-event.service';
 
 const { PORT } = process.env;
 
@@ -31,20 +30,11 @@ async function bootstrap() {
     }),
   );
 
-  /* Swagger API Docs */
-  const swaggerConfig = new DocumentBuilder()
-    .setTitle('Thingdrop API')
-    .setDescription('Documentation for interacting with the Thingdrop API')
-    .setVersion('0.1')
-    .build();
-  const document = SwaggerModule.createDocument(app, swaggerConfig);
-  SwaggerModule.setup('api/docs', app, document);
-
   /* Server Start */
   await app.listen(PORT);
 
-  const modelHandlerService: ModelHandlerService = app.get(ModelHandlerService);
-  modelHandlerService.listen();
+  const partEventService: PartEventService = app.get(PartEventService);
+  partEventService.listen();
 
   const logger = new Logger();
   logger.log(`Listening on port: ${PORT}`);

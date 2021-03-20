@@ -1,8 +1,9 @@
-import { InputType } from '@nestjs/graphql';
+import { InputType, PartialType } from '@nestjs/graphql';
 import { IsString, IsNumber, IsOptional } from 'class-validator';
+import { CreateFileInput } from './create-file.input';
 
 @InputType()
-export class UpdateFileInput {
+export class UpdateFileInput extends PartialType(CreateFileInput) {
   @IsString()
   key: string;
 

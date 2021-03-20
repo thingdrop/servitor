@@ -1,6 +1,7 @@
 export interface SignedUrlOptions {
   metadata?: any;
-  key: string;
-  contentType?: string;
+  key?: string;
   expires?: number;
+  bucket?: string;
+  size?: number;
 }

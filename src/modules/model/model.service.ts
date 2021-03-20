@@ -8,53 +8,36 @@ import {
   GetModelsFilterInput,
 } from './inputs';
 import { ModelStatus } from './types';
-import { JwtService } from '../auth';
-import { CreateFileInput, File, FileService } from '../file';
-import { PrintConfigService, UpdatePrintConfigInput } from '../print-config';
+import { CreateFileInput, File } from '../file';
+import { PrintConfigService } from '../print-config';
+import { PartService } from '../part';
 
 @Injectable()
 export class ModelService {
   constructor(
     @InjectRepository(Model)
     private modelRepository: Repository<Model>,
-    private fileService: FileService,
+    private partService: PartService,
     private printConfigService: PrintConfigService,
-    private jwtService: JwtService,
   ) {}
 
-  async createModel(createModelInput: CreateModelInput): Promise<any> {
-    const model = this.modelRepository.create(createModelInput);
-
+  async create(createModelInput: CreateModelInput): Promise<Model> {
+    const { parts, ...modelAttrs } = createModelInput;
+    const model = this.modelRepository.create(modelAttrs);
     model.status = ModelStatus.CREATED;
     /* Create an empty printConfig by default */
-    model.printConfig = this.printConfigService.createPrintConfig({});
-    await this.modelRepository.save(model);
-
-    const tokenPayload = {
-      modelId: model.id,
-      action: 'UPLOAD',
-    };
-    model.uploadToken = this.jwtService.signToken(tokenPayload, {
-      expiresIn: process.env.UPLOAD_TOKEN_EXPIRATION,
-    });
-
-    return model;
+    model.printConfig = await this.printConfigService.create({});
+    const savedModel = await this.modelRepository.save(model);
+    /* Create each part w/ a postPolicy */
+    console.log({ createModelInput, parts });
+    const createdParts = await Promise.all(
+      parts.map((part) => this.partService.create(savedModel.id, part)),
+    );
+    savedModel.parts = createdParts;
+    return savedModel;
   }
 
-  async createModelFile(
-    token: any,
-    id: string,
-    createFileInput: CreateFileInput,
-  ): Promise<File> {
-    if (token.modelId !== id) {
-      throw new NotFoundException();
-    }
-    const model = await this.getModelById(id);
-    const file = await this.fileService.createFile(model, createFileInput);
-    return file;
-  }
-
-  async getModels(filterInput: GetModelsFilterInput): Promise<any> {
+  async getModels(filterInput: GetModelsFilterInput): Promise<Model[]> {
     const { search, status, page, limit, sortby, orderby } = filterInput;
 
     const limitValue = parseInt(limit, 10) || 20;
@@ -92,14 +75,10 @@ export class ModelService {
     // };
   }
 
-  getModelFile(id: string): Promise<File> {
-    return this.fileService.getFileByModelId(id);
-  }
-
-  async getModelById(id: string): Promise<Model> {
+  async getById(id: string): Promise<Model> {
     const model = await this.modelRepository.findOne({
       where: { id },
-      relations: ['file', 'printConfig'],
+      relations: ['parts', 'printConfig'],
     });
     if (!model) {
       throw new NotFoundException();
@@ -107,25 +86,8 @@ export class ModelService {
     return model;
   }
 
-  saveModel(model: Model) {
-    return this.modelRepository.save(model);
-  }
-
-  async updateModelPrintConfig(
-    id: string,
-    updatePrintConfigInput: UpdatePrintConfigInput,
-  ) {
-    const model = await this.getModelById(id);
-    const printConfig = await this.printConfigService.create(
-      model,
-      updatePrintConfigInput,
-    );
-    model.printConfig = printConfig;
-    return model;
-  }
-
-  async updateModel(id: string, updateModelInput: UpdateModelInput) {
-    const model = await this.getModelById(id);
+  async update(id: string, updateModelInput: UpdateModelInput): Promise<Model> {
+    const model = await this.getById(id);
     const updatedModel = Object.assign(model, updateModelInput);
     await this.modelRepository.save(updatedModel);
     return updatedModel;

@@ -1,4 +1,3 @@
-import { UseGuards } from '@nestjs/common';
 import {
   Resolver,
   Query,
@@ -14,35 +13,20 @@ import {
   CreateModelInput,
   UpdateModelInput,
 } from './inputs';
-import { CreateFileInput, File, FileGuard, FileService } from '../file';
-import {
-  PrintConfig,
-  PrintConfigService,
-  UpdatePrintConfigInput,
-} from '../print-config';
-import { Token } from '../../common/decorators';
+import { PrintConfig, PrintConfigService } from '../print-config';
+import { Part, PartService } from '../part';
 
 @Resolver(() => Model)
 export class ModelResolver {
   constructor(
     private modelService: ModelService,
-    private fileService: FileService,
+    private partService: PartService,
     private printConfigService: PrintConfigService,
   ) {}
 
   @Mutation(() => Model)
   createModel(@Args('createModelInput') createModelInput: CreateModelInput) {
-    return this.modelService.createModel(createModelInput);
-  }
-
-  @Mutation(() => File)
-  @UseGuards(FileGuard)
-  createModelFile(
-    @Token() token: any,
-    @Args('id') id: string,
-    @Args('createFileInput') createFileInput: CreateFileInput,
-  ): Promise<File> {
-    return this.modelService.createModelFile(token, id, createFileInput);
+    return this.modelService.create(createModelInput);
   }
 
   @Query(() => [Model])
@@ -54,33 +38,28 @@ export class ModelResolver {
 
   @Query(() => Model)
   model(@Args('id') id: string): Promise<Model> {
-    return this.modelService.getModelById(id);
+    return this.modelService.getById(id);
   }
 
+  /* TODO: auth guard */
   @Mutation(() => Model)
   updateModel(
     @Args('id') id: string,
     @Args('updateModelInput') updateModelInput: UpdateModelInput,
   ): Promise<Model> {
-    return this.modelService.updateModel(id, updateModelInput);
+    return this.modelService.update(id, updateModelInput);
   }
 
-  @Mutation(() => Model)
-  updatePrintConfig(
-    @Args('id') id: string,
-    @Args('updatePrintConfigInput')
-    updatePrintConfigInput: UpdatePrintConfigInput,
-  ): Promise<Model> {
-    return this.modelService.updateModelPrintConfig(id, updatePrintConfigInput);
-  }
-
-  @ResolveField('file', () => File)
-  file(@Parent() model: Model): Promise<File> {
-    return this.fileService.getFileById(model.fileId);
-  }
-
-  @ResolveField('printConfig', () => File)
+  @ResolveField('printConfig', () => PrintConfig)
   printConfig(@Parent() model: Model): Promise<PrintConfig> {
-    return this.printConfigService.getPrintConfigById(model.printConfigId);
+    return this.printConfigService.getById(model.printConfigId);
+  }
+
+  @ResolveField('parts', () => Part)
+  parts(@Parent() model: Model): Promise<Part[]> | Part[] {
+    if (model.parts) {
+      return model.parts;
+    }
+    return this.partService.findAllByModelId(model.id);
   }
 }

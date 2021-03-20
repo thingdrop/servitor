@@ -11,20 +11,15 @@ export class PrintConfigService {
     @InjectRepository(PrintConfig)
     private printConfigRepository: Repository<PrintConfig>,
   ) {}
-  async create(model: Model, createPrintConfigInput: CreatePrintConfigInput) {
+
+  async create(createPrintConfigInput: CreatePrintConfigInput) {
     const printConfig = this.printConfigRepository.create(
       createPrintConfigInput,
     );
-    printConfig.model = model;
-    await this.printConfigRepository.save(printConfig);
-    return printConfig;
+    return this.printConfigRepository.save(printConfig);
   }
 
-  createPrintConfig(createPrintConfigInput: CreatePrintConfigInput) {
-    return this.printConfigRepository.create(createPrintConfigInput);
-  }
-
-  async getPrintConfigById(id: string) {
+  async getById(id: string) {
     const printConfig = await this.printConfigRepository.findOne({
       where: { id },
     });
@@ -34,25 +29,13 @@ export class PrintConfigService {
     return printConfig;
   }
 
-  findAll() {
-    return `This action returns all printConfig`;
-  }
-
-  findOne(id: string) {
-    return `This action returns a #${id} printConfig`;
-  }
-
   async update(id: string, updatePrintConfigInput: UpdatePrintConfigInput) {
-    const printConfig = await this.getPrintConfigById(id);
+    const printConfig = await this.getById(id);
     const updatedPrintConfig = Object.assign(
       printConfig,
       updatePrintConfigInput,
     );
     await this.printConfigRepository.save(updatedPrintConfig);
     return updatedPrintConfig;
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} printConfig`;
   }
 }

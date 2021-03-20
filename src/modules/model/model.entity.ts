@@ -1,40 +1,33 @@
-import { ObjectType } from '@nestjs/graphql';
-import { Entity, Column, OneToOne, JoinColumn } from 'typeorm';
-import { Exclude, Expose } from 'class-transformer';
-import { IsString, IsBoolean, IsOptional, IsUrl } from 'class-validator';
+import { HideField, ObjectType } from '@nestjs/graphql';
+import { Entity, Column, OneToOne, JoinColumn, OneToMany } from 'typeorm';
+import { IsString, IsBoolean, IsOptional, IsUUID } from 'class-validator';
 import { BaseEntity } from '../../common/entities';
-import { File } from '../file';
 import { ModelStatus, ModelLicense } from './types';
 import { PrintConfig } from '../print-config';
+import { Part } from '../part';
 
 @ObjectType('Model')
 @Entity()
 export class Model extends BaseEntity {
   /* Relations */
-  @OneToOne(() => File, (file) => file.model)
-  @JoinColumn({ referencedColumnName: 'id' })
-  file?: File;
+  @OneToMany(() => Part, (part) => part.model)
+  parts?: Part[];
 
-  @Exclude()
-  @Column({ nullable: true })
-  fileId: string;
-
-  @OneToOne(() => PrintConfig, (printConfig) => printConfig.model, {
-    cascade: true,
-  })
+  @OneToOne(() => PrintConfig, (printConfig) => printConfig.model)
   @JoinColumn({ referencedColumnName: 'id' })
   printConfig?: PrintConfig;
 
-  @Exclude()
+  @HideField()
   @Column({ nullable: true })
+  @IsUUID()
   printConfigId: string;
 
   /* Fields */
-  @Column()
+  @Column({ default: '' })
   @IsString()
   name: string;
 
-  @Column()
+  @Column({ default: '' })
   @IsString()
   description: string;
 
@@ -42,13 +35,9 @@ export class Model extends BaseEntity {
   @IsString()
   status: string;
 
-  @Column()
+  @Column({ default: false })
   @IsBoolean()
   isPrivate: boolean;
-
-  @Column({ nullable: true })
-  @IsUrl()
-  imagePreview?: string;
 
   /* Model usage/remix restrictions - MIT, Apache, etc */
   @Column('enum', { enum: ModelLicense, nullable: true })
@@ -56,8 +45,6 @@ export class Model extends BaseEntity {
   @IsOptional()
   license?: string;
 
-  @Expose()
-  @IsString()
-  uploadToken?: string;
-  model: Promise<PrintConfig>;
+  // @IsJWT()
+  // accessToken?: string;
 }
