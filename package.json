@@ -28,7 +28,7 @@
     "@nestjs/swagger": "^4.7.15",
     "@nestjs/typeorm": "^7.1.5",
     "apollo-server-express": "^2.21.0",
-    "aws-sdk": "^2.858.0",
+    "aws-sdk": "^2.897.0",
     "class-transformer": "^0.3.2",
     "class-validator": "^0.13.1",
     "dotenv": "^8.2.0",
